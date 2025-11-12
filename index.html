@@ -1,0 +1,381 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cookie Clicker Sim</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: #fff;
+        }
+
+        .container {
+            max-width: 1200px;
+            width: 90%;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            padding: 20px;
+        }
+
+        .panel {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+        }
+
+        .clicker-panel {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        h1 {
+            font-size: 2.5em;
+            margin-bottom: 20px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        .score {
+            font-size: 3em;
+            font-weight: bold;
+            margin-bottom: 30px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        .click-button {
+            width: 200px;
+            height: 200px;
+            border-radius: 50%;
+            background: linear-gradient(145deg, #f39c12, #e67e22);
+            border: none;
+            cursor: pointer;
+            font-size: 3em;
+            transition: transform 0.1s, box-shadow 0.1s;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+            margin-bottom: 20px;
+        }
+
+        .click-button:hover {
+            transform: scale(1.05);
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.5);
+        }
+
+        .click-button:active {
+            transform: scale(0.95);
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.4);
+        }
+
+        .stats {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .stat-item {
+            background: rgba(255, 255, 255, 0.15);
+            padding: 15px;
+            border-radius: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .stat-label {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+
+        .stat-value {
+            font-size: 1.3em;
+            font-weight: bold;
+        }
+
+        .upgrades-panel h2 {
+            font-size: 2em;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .upgrade-list {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .upgrade-item {
+            background: rgba(255, 255, 255, 0.15);
+            padding: 20px;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s;
+            border: 2px solid transparent;
+        }
+
+        .upgrade-item:hover:not(.disabled) {
+            background: rgba(255, 255, 255, 0.25);
+            border-color: rgba(255, 255, 255, 0.5);
+            transform: translateX(5px);
+        }
+
+        .upgrade-item.disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .upgrade-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .upgrade-name {
+            font-size: 1.3em;
+            font-weight: bold;
+        }
+
+        .upgrade-cost {
+            background: rgba(243, 156, 18, 0.8);
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-weight: bold;
+        }
+
+        .upgrade-description {
+            font-size: 0.9em;
+            opacity: 0.8;
+            margin-bottom: 5px;
+        }
+
+        .upgrade-owned {
+            font-size: 0.9em;
+            color: #3498db;
+            font-weight: bold;
+        }
+
+        .floating-number {
+            position: fixed;
+            font-size: 2em;
+            font-weight: bold;
+            color: #f39c12;
+            pointer-events: none;
+            animation: float-up 1s ease-out forwards;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+        }
+
+        @keyframes float-up {
+            0% {
+                opacity: 1;
+                transform: translateY(0);
+            }
+            100% {
+                opacity: 0;
+                transform: translateY(-100px);
+            }
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="panel clicker-panel">
+            <h1>🍪 Clicker Sim</h1>
+            <div class="score" id="score">0</div>
+            <button class="click-button" id="clickButton">🍪</button>
+
+            <div class="stats">
+                <div class="stat-item">
+                    <span class="stat-label">Per Click:</span>
+                    <span class="stat-value" id="perClick">1</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">Per Second:</span>
+                    <span class="stat-value" id="perSecond">0</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">Total Clicks:</span>
+                    <span class="stat-value" id="totalClicks">0</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="panel upgrades-panel">
+            <h2>Upgrades</h2>
+            <div class="upgrade-list" id="upgradeList"></div>
+        </div>
+    </div>
+
+    <script>
+        let score = 0;
+        let clickPower = 1;
+        let autoClickRate = 0;
+        let totalClicks = 0;
+
+        const upgrades = [
+            {
+                id: 'cursor',
+                name: 'Cursor',
+                baseCost: 15,
+                costMultiplier: 1.15,
+                effect: 0.1,
+                owned: 0,
+                description: '+0.1 per second',
+                type: 'auto'
+            },
+            {
+                id: 'grandma',
+                name: 'Grandma',
+                baseCost: 100,
+                costMultiplier: 1.15,
+                effect: 1,
+                owned: 0,
+                description: '+1 per second',
+                type: 'auto'
+            },
+            {
+                id: 'farm',
+                name: 'Cookie Farm',
+                baseCost: 500,
+                costMultiplier: 1.15,
+                effect: 8,
+                owned: 0,
+                description: '+8 per second',
+                type: 'auto'
+            },
+            {
+                id: 'factory',
+                name: 'Factory',
+                baseCost: 3000,
+                costMultiplier: 1.15,
+                effect: 47,
+                owned: 0,
+                description: '+47 per second',
+                type: 'auto'
+            },
+            {
+                id: 'click',
+                name: 'Better Clicks',
+                baseCost: 50,
+                costMultiplier: 1.2,
+                effect: 1,
+                owned: 0,
+                description: '+1 per click',
+                type: 'click'
+            },
+            {
+                id: 'megaclick',
+                name: 'Mega Clicks',
+                baseCost: 500,
+                costMultiplier: 1.25,
+                effect: 10,
+                owned: 0,
+                description: '+10 per click',
+                type: 'click'
+            }
+        ];
+
+        function getCost(upgrade) {
+            return Math.floor(upgrade.baseCost * Math.pow(upgrade.costMultiplier, upgrade.owned));
+        }
+
+        function updateDisplay() {
+            document.getElementById('score').textContent = Math.floor(score).toLocaleString();
+            document.getElementById('perClick').textContent = clickPower.toLocaleString();
+            document.getElementById('perSecond').textContent = autoClickRate.toFixed(1);
+            document.getElementById('totalClicks').textContent = totalClicks.toLocaleString();
+        }
+
+        function createFloatingNumber(x, y, value) {
+            const floatingNum = document.createElement('div');
+            floatingNum.className = 'floating-number';
+            floatingNum.textContent = '+' + value;
+            floatingNum.style.left = x + 'px';
+            floatingNum.style.top = y + 'px';
+            document.body.appendChild(floatingNum);
+            setTimeout(() => floatingNum.remove(), 1000);
+        }
+
+        function renderUpgrades() {
+            const upgradeList = document.getElementById('upgradeList');
+            upgradeList.innerHTML = '';
+
+            upgrades.forEach(upgrade => {
+                const cost = getCost(upgrade);
+                const canAfford = score >= cost;
+
+                const upgradeDiv = document.createElement('div');
+                upgradeDiv.className = `upgrade-item ${!canAfford ? 'disabled' : ''}`;
+                upgradeDiv.innerHTML = `
+                    <div class="upgrade-header">
+                        <span class="upgrade-name">${upgrade.name}</span>
+                        <span class="upgrade-cost">${cost.toLocaleString()}</span>
+                    </div>
+                    <div class="upgrade-description">${upgrade.description}</div>
+                    <div class="upgrade-owned">Owned: ${upgrade.owned}</div>
+                `;
+
+                upgradeDiv.addEventListener('click', () => {
+                    if (canAfford) {
+                        score -= cost;
+                        upgrade.owned++;
+
+                        if (upgrade.type === 'auto') {
+                            autoClickRate += upgrade.effect;
+                        } else if (upgrade.type === 'click') {
+                            clickPower += upgrade.effect;
+                        }
+
+                        updateDisplay();
+                        renderUpgrades();
+                    }
+                });
+
+                upgradeList.appendChild(upgradeDiv);
+            });
+        }
+
+        document.getElementById('clickButton').addEventListener('click', (e) => {
+            score += clickPower;
+            totalClicks++;
+            createFloatingNumber(e.clientX, e.clientY, clickPower);
+            updateDisplay();
+            renderUpgrades();
+        });
+
+        // Auto-clicker
+        setInterval(() => {
+            if (autoClickRate > 0) {
+                score += autoClickRate / 10;
+                updateDisplay();
+                renderUpgrades();
+            }
+        }, 100);
+
+        // Initialize
+        updateDisplay();
+        renderUpgrades();
+    </script>
+</body>
+</html>
